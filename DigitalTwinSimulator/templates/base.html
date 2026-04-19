@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin Career Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="light-mode">
+    <nav class="navbar">
+        <div class="logo">
+            <img src="/public/images/logo.png" alt="Simulator Logo" class="logo-img">
+            <span>Digital Twin Simulator</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/results">Dashboard</a>
+            <a href="/compare">Compare</a>
+            <a href="/login" class="nav-auth">Login</a>
+            <a href="/register" class="nav-auth-btn">Register</a>
+            <button id="theme-toggle" class="btn-theme">🌙</button>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="hidden">
+        <div class="spinner"></div>
+        <p>Simulating your career...</p>
+    </div>
+
+    <script src="/public/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-subtitle">Login to access your career simulations</p>
+
+        <form id="login-form">
+            <div class="form-group" style="margin-bottom:0;">
+                <input type="email" class="auth-input" placeholder="Email Address" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <input type="password" class="auth-input" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn-auth">Sign In</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Don't have an account? <a href="/register">Create one</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Mock Login
+        document.getElementById('loading').children[1].innerText = "Signing in...";
+        document.getElementById('loading').classList.remove('hidden');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    });
+</script>
+{% endblock %}

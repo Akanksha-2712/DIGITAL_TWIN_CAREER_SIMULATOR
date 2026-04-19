@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-container">
+    <div class="hero">
+        <h1>Simulate Your Future Career</h1>
+        <p>Enter your skills, interests, and experience to generate personalized career paths using our Digital Twin.</p>
+    </div>
+
+    <div class="form-card card">
+        <form id="simulator-form">
+            <div class="form-group">
+                <label>Select Your Skills</label>
+                <div id="skills-container" class="skills-grid">
+                    <!-- Skills will be loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Experience Level</label>
+                <select id="experience-level" required>
+                    <option value="Beginner">Beginner (0-2 years)</option>
+                    <option value="Intermediate">Intermediate (3-5 years)</option>
+                    <option value="Advanced">Advanced (5+ years)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Interests</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="interests" value="Tech"> Tech</label>
+                    <label><input type="checkbox" name="interests" value="Business"> Business</label>
+                    <label><input type="checkbox" name="interests" value="Creative"> Creative</label>
+                    <label><input type="checkbox" name="interests" value="Research"> Research</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-large">Simulate Career</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load skills on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/skills')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('skills-container');
+                // Group by category
+                const groups = {};
+                data.forEach(skill => {
+                    const cat = skill.category || 'Other';
+                    if(!groups[cat]) groups[cat] = [];
+                    groups[cat].push(skill);
+                });
+                
+                let html = '';
+                for(let cat in groups) {
+                    html += `<div class="skill-category"><h4>${cat}</h4><div class="skills-grid">`;
+                    groups[cat].forEach(skill => {
+                        html += `
+                            <label class="skill-tag">
+                                <input type="checkbox" name="skills" value="${skill.id}">
+                                ${skill.name}
+                            </label>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+                container.innerHTML = html;
+
+                // Restore previous selections if they exist
+                const savedInputs = localStorage.getItem('simulationInputs');
+                if (savedInputs) {
+                    try {
+                        const parsed = JSON.parse(savedInputs);
+                        if (parsed.skills) {
+                            parsed.skills.forEach(skillId => {
+                                const cb = document.querySelector(`input[name="skills"][value="${skillId}"]`);
+                                if (cb) cb.checked = true;
+                            });
+                        }
+                        if (parsed.experience_level) {
+                            document.getElementById('experience-level').value = parsed.experience_level;
+                        }
+                        if (parsed.interests) {
+                            parsed.interests.forEach(interest => {
+                                const cb = document.querySelector(`input[name="interests"][value="${interest}"]`);
+                                if (cb) cb.checked = true;
+                            });
+                        }
+                    } catch (e) {
+                         console.error("Error parsing saved inputs", e);
+                    }
+                }
+            });
+
+        document.getElementById('simulator-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked')).map(el => parseInt(el.value));
+            const experience = document.getElementById('experience-level').value;
+            const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(el => el.value);
+
+            if(selectedSkills.length === 0) {
+                alert('Please select at least one skill.');
+                return;
+            }
+
+            // Save to localStorage for back button functionality
+            localStorage.setItem('simulationInputs', JSON.stringify({
+                skills: selectedSkills,
+                experience_level: experience,
+                interests: interests
+            }));
+
+            document.getElementById('loading').classList.remove('hidden');
+
+            fetch('/api/simulate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    skills: selectedSkills,
+                    experience_level: experience,
+                    interests: interests
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                localStorage.setItem('simulationResults', JSON.stringify(data));
+                window.location.href = '/results';
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error running simulation');
+                document.getElementById('loading').classList.add('hidden');
+            });
+        });
+    });
+</script>
+{% endblock %}

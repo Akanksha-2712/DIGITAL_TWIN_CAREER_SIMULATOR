@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="compare-container">
+    <h2>Compare Careers Side-by-Side</h2>
+    <div class="compare-selectors">
+        <select id="career1">
+            <option value="">Select Career 1</option>
+        </select>
+        <select id="career2">
+            <option value="">Select Career 2</option>
+        </select>
+        <button id="btn-compare" class="btn-primary">Compare</button>
+    </div>
+
+    <div id="comparison-results" class="comparison-grid hidden">
+        <div id="col1" class="compare-col card"></div>
+        <div id="col2" class="compare-col card"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allCareers = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/careers')
+            .then(res => res.json())
+            .then(data => {
+                allCareers = data;
+                const c1 = document.getElementById('career1');
+                const c2 = document.getElementById('career2');
+                
+                data.forEach(c => {
+                    c1.innerHTML += `<option value="${c.id}">${c.title}</option>`;
+                    c2.innerHTML += `<option value="${c.id}">${c.title}</option>`;
+                });
+            });
+
+        document.getElementById('btn-compare').addEventListener('click', () => {
+            const v1 = document.getElementById('career1').value;
+            const v2 = document.getElementById('career2').value;
+
+            if(!v1 || !v2) {
+                alert('Please select two careers to compare.');
+                return;
+            }
+
+            const career1 = allCareers.find(c => c.id == v1);
+            const career2 = allCareers.find(c => c.id == v2);
+
+            renderCompareColumn('col1', career1);
+            renderCompareColumn('col2', career2);
+            document.getElementById('comparison-results').classList.remove('hidden');
+        });
+    });
+
+    function renderCompareColumn(colId, career) {
+        const col = document.getElementById(colId);
+        
+        let reqSkills = career.skills.map(s => `<span class="tag">${s.name} (${s.pivot.weight}/5)</span>`).join('');
+        
+        // Generate simple table for 5 year growth
+        let salaryHtml = '<table class="salary-table"><tr><th>Year</th><th>Salary</th></tr>';
+        let currentS = parseFloat(career.base_salary);
+        for(let i=0; i<=5; i++) {
+            salaryHtml += `<tr><td>Year ${i}</td><td>$${Math.round(currentS).toLocaleString()}</td></tr>`;
+            currentS = currentS * (1 + parseFloat(career.growth_rate));
+        }
+        salaryHtml += '</table>';
+
+        col.innerHTML = `
+            <h3>${career.title}</h3>
+            <p>${career.description}</p>
+            <div class="stat-group">
+                <strong>Base Salary:</strong> $${parseFloat(career.base_salary).toLocaleString()}
+            </div>
+            <div class="stat-group">
+                <strong>Growth Rate:</strong> ${(career.growth_rate * 100).toFixed(1)}% / year
+            </div>
+            <div class="stat-group">
+                <strong>Key Skills Required:</strong>
+                <div class="tags-container">${reqSkills}</div>
+            </div>
+            <div class="stat-group">
+                <strong>5-Year Projection:</strong>
+                ${salaryHtml}
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

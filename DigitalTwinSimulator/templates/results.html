@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="results-container">
+    <div class="header-section">
+        <h2>Your Career Simulation Results</h2>
+        <p>Based on your profile, here are your top career matches and 5-year projections.</p>
+        <a href="/" class="btn-primary" style="display:inline-block; margin-top:1rem; text-decoration:none;">&larr; Edit Skills & Profile</a>
+    </div>
+    
+    <div id="results-grid" class="cards-grid">
+        <!-- Results appended here by JS -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const resultsData = localStorage.getItem('simulationResults');
+        if(!resultsData) {
+            window.location.href = '/';
+            return;
+        }
+
+        const results = JSON.parse(resultsData);
+        const container = document.getElementById('results-grid');
+
+        results.forEach((match, index) => {
+            const missingSkillsHtml = match.missing_skills.map(s => `<span class="tag tag-missing">${s.name}</span>`).join('');
+            
+            const cardHtml = `
+                <div class="career-card card">
+                    <div class="card-header">
+                        <h3>${match.title}</h3>
+                        <div class="match-badge">${match.match_percentage}% Match</div>
+                    </div>
+                    <p class="desc">${match.description}</p>
+                    
+                    <div class="skills-section">
+                        <h4>What to Learn Next:</h4>
+                        <div class="tags-container">
+                            ${missingSkillsHtml || '<span class="tag tag-ok">You have all required skills!</span>'}
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="chart-${index}"></canvas>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        });
+
+        // Initialize Charts
+        results.forEach((match, index) => {
+            const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+            const years = match.salary_projection.map(p => `Year ${p.year}`);
+            const salaries = match.salary_projection.map(p => p.salary);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Projected Salary ($)',
+                        data: salaries,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

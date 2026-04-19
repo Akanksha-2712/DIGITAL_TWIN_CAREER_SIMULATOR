@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Create Account</h2>
+        <p class="auth-subtitle">Join us to plan your perfect career path</p>
+
+        <form id="register-form">
+            <div class="form-group" style="margin-bottom:0;">
+                <input type="text" class="auth-input" placeholder="Full Name" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <input type="email" class="auth-input" placeholder="Email Address" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <input type="password" class="auth-input" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn-auth">Create Account</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Already have an account? <a href="/login">Sign In</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('register-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Mock Registration
+        document.getElementById('loading').children[1].innerText = "Creating account...";
+        document.getElementById('loading').classList.remove('hidden');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1200);
+    });
+</script>
+{% endblock %}
